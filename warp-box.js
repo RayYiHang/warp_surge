@@ -1284,8 +1284,6 @@ if (typeof module !== 'undefined') {
     };
 }
 
-}
-
 // 简化的HTML生成函数 - 避免超时
 function getSimpleManagerHTML() {
     return `<!DOCTYPE html>
@@ -1341,8 +1339,15 @@ function getSimpleManagerHTML() {
 </html>`;
 }
 
-console.log('🌐 Warp Account Manager Box.js风格实现已加载');
-console.log('📱 访问地址: http://warpmanager.com');
-console.log('🔄 备用地址: http://warp.local');
-console.log('🔧 技术实现: 完全基于Surge的URL Rewrite + Script');
-console.log('⚡ 优化版本: 避免脚本超时问题');
+// Surge脚本导出
+if (typeof $request !== 'undefined') {
+    const response = {};
+    handleRequest($request, response);
+    $done(response);
+} else {
+    console.log('🌐 Warp Account Manager Box.js风格实现已加载');
+    console.log('📱 访问地址: http://warpmanager.com');
+    console.log('🔄 备用地址: http://warp.local');
+    console.log('🔧 技术实现: 完全基于Surge的URL Rewrite + Script');
+    console.log('⚡ 优化版本: 避免脚本超时问题');
+}
