@@ -1,5 +1,5 @@
-#!name=Warp Account Manager (Box.js标准)
-#!desc=Warp.dev账户管理器 - 严格参照Box.js实现的Surge解决方案
+#!name=WarpManager
+#!desc=Warp.dev账户管理器 - Box.js标准实现
 #!author=RayYiHang
 #!homepage=https://github.com/RayYiHang/warp_surge
 #!icon=https://warp.dev/favicon.ico
