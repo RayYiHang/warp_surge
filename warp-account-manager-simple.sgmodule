@@ -1,26 +1,17 @@
-#!name=Warp Account Manager
-#!desc=Warp.dev账户管理器 - 简化版本，确保兼容性
+#!name=Warp Account Manager (简化版)
+#!desc=Warp.dev账户管理器 - 简化版避免超时问题
 #!author=RayYiHang
 #!homepage=https://github.com/RayYiHang/warp_surge
+#!icon=https://warp.dev/favicon.ico
+
+[General]
+# 强制HTTP引擎处理这些域名
+force-http-engine-hosts = %APPEND% warpmanager.com, *.warpmanager.com
 
 [Script]
-# 核心Web服务器 - Box.js风格实现
-warp-box-server = type=http-request,pattern=^http://warp\.local,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-box.js
-
-[Rule]
-# 将warp.local的所有请求重定向到脚本处理
-URL-REGEX:(http|https)://warp\.local/?.* - REJECT
-
-[Host]
-# 本地域名映射
-127.0.0.1 warp.local
-
-[URL Rewrite]
-# 核心重写规则 - 将warp.local请求交给HTTP Request脚本处理
-^https?://warp\.local - REJECT-200
-
-# Warp API请求处理
-^https://app\.warp\.dev - REJECT-DICT
+# 简化版脚本 - 专注于快速响应，避免超时
+warp-manager-simple = type=http-request,pattern=^https?:\/\/(.+\.)?warpmanager\.com,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-box-simple.js,requires-body=false,timeout=60
 
 [MITM]
-hostname = app.warp.dev, dataplane.rudderstack.com, securetoken.googleapis.com
+# 添加到MITM主机名列表
+hostname = %INSERT% warpmanager.com, *.warpmanager.com
