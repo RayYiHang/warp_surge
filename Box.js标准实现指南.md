@@ -44,14 +44,14 @@ https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-acco
 
 ### 3️⃣ 访问管理界面
 ```
-https://warpmanager.com
+http://warpmanager.com
 ```
 
 ## 📋 工作流程
 
 ### 🔄 请求处理流程
 
-1. **用户访问**: `https://warpmanager.com`
+1. **用户访问**: `http://warpmanager.com`
 2. **Surge 检测**: `force-http-engine-hosts` 让 Surge 处理这个请求
 3. **MITM 拦截**: 由于在 `hostname` 列表中，请求被拦截
 4. **脚本匹配**: `pattern` 匹配到 `warpmanager.com`
