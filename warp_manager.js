@@ -300,17 +300,5 @@ function handleResponse(response, request) {
     return response;
 }
 
-// 导出函数供Surge使用
-if (typeof module !== 'undefined') {
-    module.exports = {
-        initializeStorage,
-        addAccount,
-        setActiveAccount,
-        getActiveAccount,
-        getAccountList,
-        deleteAccount,
-        updateAccountToken,
-        handleRequest,
-        handleResponse
-    };
-}
+// 初始化数据存储
+initializeStorage();

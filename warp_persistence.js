@@ -205,19 +205,5 @@ function autoBackup() {
     }
 }
 
-// 导出函数
-if (typeof module !== 'undefined') {
-    module.exports = {
-        initDatabase,
-        backupData,
-        restoreData,
-        clearAllData,
-        getStorageStats,
-        getSettings,
-        setSettings,
-        autoBackup
-    };
-}
-
 // 初始化数据库
 initDatabase();

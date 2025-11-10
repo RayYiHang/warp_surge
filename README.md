@@ -1,14 +1,143 @@
-# Warp Account Manager
+# Warp Account Manager - Surge版本
 
-![Warp Account Manager](img/en.png)
+[![Surge Module](https://img.shields.io/badge/Surge-Module-blue)](https://github.com/RayYiHang/warp_surge)
+[![Remote Install](https://img.shields.io/badge/Remote-Install-green)](https://github.com/RayYiHang/warp_surge)
 
-This extension allows you to easily switch between your accounts.
-- No ban issues
-- Custom chrome extension
+🚀 **支持一键远程安装的Surge模块！**
 
-## NOTE
+基于Surge的Warp.dev账户管理器，完全替代Python项目，实现相同功能但更轻量高效。
 
-This project is designed to facilitate the use of Warp.dev. No responsibility is accepted.
+## ⚡ 一键安装
 
-## Usage Video:
-https://youtu.be/5_itpYHZGJc
+### 方法1: 直接安装模块
+复制以下链接到Surge的模块管理界面：
+
+```
+https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-account-manager.sgmodule
+```
+
+### 方法2: 扫描二维码
+在GitHub仓库页面查看安装二维码。
+
+## ✨ 主要功能
+
+| 功能 | 说明 | 状态 |
+|------|------|------|
+| 🔐 多账户管理 | 支持添加、删除、切换Warp账户 | ✅ 完成 |
+| 🔄 自动Token刷新 | 智能检测并刷新即将过期的token | ✅ 完成 |
+| 🛡️ 账户健康监控 | 自动检测403/401等错误状态 | ✅ 完成 |
+| 💾 数据持久化 | 本地存储账户数据，支持备份恢复 | ✅ 完成 |
+| 🌐 请求拦截 | 智能处理Warp API请求和响应 | ✅ 完成 |
+| 📊 统计分析 | 提供账户状态和使用统计 | ✅ 完成 |
+
+## 🛠️ 安装步骤
+
+### 1. 安装模块
+在Surge中添加模块：
+- 设置 → 模块管理 → 安装模块
+- 粘贴上述链接或扫描二维码
+
+### 2. 启用MitM
+- 设置 → HTTPS解密 → 开启MitM
+- 配置主机名：`app.warp.dev, dataplane.rudderstack.com, securetoken.googleapis.com`
+
+### 3. 配置账户
+从Chrome开发者工具获取账户数据，然后通过Surge脚本添加：
+```javascript
+// 在Surge脚本控制台执行
+accountManager.addAccount({
+    "email": "your-email@example.com",
+    "stsTokenManager": {
+        "accessToken": "...",
+        "refreshToken": "...",
+        "expirationTime": 1234567890000
+    }
+});
+```
+
+### 4. 切换账户
+```javascript
+// 设置活跃账户
+accountManager.setActiveAccount("your-email@example.com");
+```
+
+## 📁 核心组件
+
+- **`warp_manager.js`** - 核心账户管理和请求处理
+- **`warp_persistence.js`** - 数据持久化和备份功能
+- **`warp_token_refresh.js`** - 自动token刷新服务
+- **`warp_response_handler.js`** - 响应分析和状态监控
+
+## ⚙️ 配置选项
+
+```javascript
+const settings = {
+    autoRefresh: true,        // 自动刷新token
+    banDetection: true,       // 启用ban检测
+    healthCheck: true,        // 健康状态检查
+    autoSwitch: false         // 自动切换账户
+};
+```
+
+## 📊 使用统计
+
+实时查看账户状态：
+- 总账户数量
+- 健康账户数量
+- 被封账户数量
+- Token刷新统计
+- 请求成功率
+
+## 🔧 故障排除
+
+### Token刷新失败
+1. 检查网络连接
+2. 验证refreshToken有效性
+3. 查看Surge控制台日志
+
+### 账户被误判封禁
+1. 手动重置健康状态
+2. 检查API响应内容
+3. 调整检测敏感度
+
+### 数据丢失
+1. 使用备份恢复功能
+2. 检查持久存储权限
+3. 重新初始化数据库
+
+## 🚀 性能优势
+
+| 项目 | Python方案 | Surge方案 |
+|------|-----------|----------|
+| 资源占用 | 高 (Python+Qt+Mitmproxy) | 低 (纯Surge) |
+| 安装复杂度 | 需要环境配置 | 一键安装 |
+| 启动速度 | 慢 (多组件) | 快 (单模块) |
+| 维护成本 | 高 | 低 |
+| 兼容性 | 依赖系统 | Surge原生 |
+
+## 📝 更新日志
+
+### v1.0.0 (2024-01-XX)
+- ✅ 完整移植Python项目功能
+- ✅ 实现Surge远程安装支持
+- ✅ 优化模块结构和依赖关系
+- ✅ 添加智能token刷新机制
+- ✅ 完善错误处理和状态监控
+
+## 🤝 贡献
+
+欢迎提交Issue和Pull Request来改进这个项目！
+
+## 📄 许可证
+
+本项目基于原Python项目转换而来，遵循相同的许可证。
+
+## 🔗 相关链接
+
+- [GitHub仓库](https://github.com/RayYiHang/warp_surge)
+- [原Python项目](https://github.com/RayYiHang/warp.dev_account_manager)
+- [Surge官方文档](https://manual.nssurge.com/)
+
+---
+
+**⚠️ 免责声明**: 本项目仅用于学习和研究目的，请遵守相关服务条款。

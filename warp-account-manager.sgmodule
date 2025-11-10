@@ -1,38 +1,43 @@
 #!name=Warp Account Manager
-#!desc=Warp.dev账户管理器 - Surge实现版
+#!desc=Warp.dev账户管理器 - Surge实现版，支持远程一键安装
 #!author=Converted from Python project
-#!homepage=https://github.com/
+#!homepage=https://github.com/RayYiHang/warp_surge
 
 # [Script]
-# Warp账户管理器主脚本
-warp-account-manager = type=script-name="Warp账户管理器",script-path=warp_manager.js
+# 核心账户管理器 - 必须首先执行
+warp-account-manager = type=script-name="Warp账户管理器",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_manager.js
 
-# 账户数据持久化
-warp-data-persistence = type=script-name="账户数据持久化",script-path=warp_persistence.js
+# 请求处理器 - 处理所有Warp API请求
+warp-request-handler = type=http-request,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_manager.js,pattern=^https://app\.warp\.dev
 
-# Token自动刷新
-warp-token-refresh = type=script-name="Token自动刷新",script-path=warp_token_refresh.js
+# 响应处理器 - 分析API响应和状态
+warp-response-handler = type=http-response,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_response_handler.js,pattern=^https://app\.warp\.dev
 
-# 响应处理和缓存
-warp-response-handler = type=script-name="响应处理器",script-path=warp_response_handler.js
+# 数据持久化服务
+warp-data-persistence = type=script-name="账户数据持久化",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_persistence.js
 
-# [URL Rewrite]
-# Warp API请求拦截
-^https://app\.warp\.dev - reject-dict
-
-# [Map Remote]
-# 本地代理映射
-https://app.warp.dev/api - http://127.0.0.1:8080
-
-# [Host]
-# 本地开发支持
-127.0.0.1 app.warp.dev
+# 自动token刷新服务
+warp-token-refresh = type=script-name="Token自动刷新",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_token_refresh.js
 
 # [Rule]
-# Warp流量规则
-DOMAIN,app.warp.dev,WarpProxy
-DOMAIN-SUFFIX,warp.dev,WarpProxy
+# Warp流量规则 - 确保所有Warp流量都被处理
+DOMAIN,app.warp.dev,Warp
+DOMAIN-SUFFIX,warp.dev,Warp
+
+# 阻止数据分析请求
 DOMAIN,dataplane.rudderstack.com,REJECT
+
+# [URL Rewrite]
+# 必要的请求重写规则
+^https://app\.warp\.dev/api - reject-dict
+
+# [Map Remote]
+# 本地API映射（如果需要本地开发）
+# https://app.warp.dev/api - http://127.0.0.1:8080
+
+# [Host]
+# 本地开发支持（可选）
+# 127.0.0.1 app.warp.dev
 
 # [URL Test]
 # 连接性测试

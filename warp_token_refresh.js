@@ -6,9 +6,155 @@
 const TOKEN_REFRESH_INTERVAL = 5 * 60 * 1000; // 5分钟检查一次
 const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 提前5分钟刷新
 
-// 获取账户管理器模块
-const accountManager = require('./warp_manager.js');
-const persistenceManager = require('./warp_persistence.js');
+// 配置
+const CONFIG = {
+    STORAGE_KEYS: {
+        ACCOUNTS: "warp_accounts",
+        ACTIVE_ACCOUNT: "warp_active_account",
+        USER_SETTINGS: "warp_user_settings",
+        LAST_TOKEN_CHECK: "warp_last_token_check",
+        NOTIFICATIONS: "warp_notifications"
+    },
+    WARP_API_KEY: "AIzaSyC7_n2YgtZIvc3h9YYn24HnGqNruGrbSW8",
+    TOKEN_REFRESH_URL: "https://securetoken.googleapis.com/v1/token"
+};
+
+// 账户管理功能
+const accountManager = {
+    getAccounts() {
+        const accountsData = $persistentStore.read(CONFIG.STORAGE_KEYS.ACCOUNTS);
+        return accountsData ? JSON.parse(accountsData) : {};
+    },
+
+    async updateAccountToken(email) {
+        const accounts = this.getAccounts();
+        const accountData = accounts[email];
+
+        if (!accountData) {
+            return { success: false, message: "账户不存在" };
+        }
+
+        const currentTime = Date.now();
+        const expiryTime = accountData.stsTokenManager.expirationTime;
+
+        // 检查是否需要刷新token
+        if (currentTime < (expiryTime - TOKEN_REFRESH_THRESHOLD)) {
+            return { success: true, message: "Token仍然有效" };
+        }
+
+        console.log(`正在刷新 ${email} 的token...`);
+        const refreshResult = await this.refreshToken(accountData);
+
+        if (refreshResult.success) {
+            accountData.stsTokenManager = {
+                ...accountData.stsTokenManager,
+                ...refreshResult.tokenData
+            };
+
+            accounts[email] = accountData;
+            $persistentStore.write(CONFIG.STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts));
+
+            console.log(`${email} 的token已成功刷新`);
+            return { success: true, message: "Token刷新成功" };
+        } else {
+            console.log(`${email} 的token刷新失败: ${refreshResult.error}`);
+            return { success: false, message: `Token刷新失败: ${refreshResult.error}` };
+        }
+    },
+
+    async refreshToken(accountData) {
+        return new Promise((resolve, reject) => {
+            const refreshToken = accountData.stsTokenManager.refreshToken;
+            const apiKey = accountData.apiKey || CONFIG.WARP_API_KEY;
+
+            const requestData = {
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken
+            };
+
+            const postRequest = {
+                url: `${CONFIG.TOKEN_REFRESH_URL}?key=${apiKey}`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'WarpAccountManager/1.0'
+                },
+                body: JSON.stringify(requestData)
+            };
+
+            $httpClient.post(postRequest, (error, response, data) => {
+                if (error) {
+                    console.log(`Token刷新失败: ${error}`);
+                    resolve({ success: false, error: error });
+                    return;
+                }
+
+                try {
+                    const tokenData = JSON.parse(data);
+                    if (tokenData.access_token) {
+                        const newTokenData = {
+                            accessToken: tokenData.access_token,
+                            refreshToken: tokenData.refresh_token,
+                            expirationTime: Date.now() + (tokenData.expires_in * 1000)
+                        };
+
+                        resolve({ success: true, tokenData: newTokenData });
+                    } else {
+                        resolve({ success: false, error: "无效的token响应" });
+                    }
+                } catch (parseError) {
+                    resolve({ success: false, error: `解析失败: ${parseError}` });
+                }
+            });
+        });
+    },
+
+    markAccountAsBanned(email) {
+        const accounts = this.getAccounts();
+        if (accounts[email]) {
+            accounts[email].healthStatus = 'banned';
+            $persistentStore.write(CONFIG.STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts));
+
+            // 如果是活跃账户，清除活跃状态
+            if ($persistentStore.read(CONFIG.STORAGE_KEYS.ACTIVE_ACCOUNT) === email) {
+                $persistentStore.write(CONFIG.STORAGE_KEYS.ACTIVE_ACCOUNT, "");
+            }
+
+            console.log(`账户 ${email} 已标记为ban状态`);
+            return true;
+        }
+        return false
+    }
+};
+
+// 持久化管理功能
+const persistenceManager = {
+    getSettings() {
+        try {
+            const settings = JSON.parse($persistentStore.read("warp_settings") || "{}");
+            return {
+                success: true,
+                settings: {
+                    autoRefresh: settings.autoRefresh !== false, // 默认true
+                    banDetection: settings.banDetection !== false, // 默认true
+                    healthCheck: settings.healthCheck !== false, // 默认true
+                    autoSwitch: settings.autoSwitch === true, // 默认false
+                    ...settings
+                }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `获取设置失败: ${error}`,
+                settings: {
+                    autoRefresh: true,
+                    banDetection: true,
+                    healthCheck: true,
+                    autoSwitch: false
+                }
+            };
+        }
+    }
+};
 
 // Token刷新服务
 class TokenRefreshService {
@@ -227,10 +373,6 @@ class TokenRefreshService {
 // 创建全局服务实例
 const tokenRefreshService = new TokenRefreshService();
 
-// 导出服务
-if (typeof module !== 'undefined') {
-    module.exports = tokenRefreshService;
-}
 
 // 自动启动服务（如果启用自动刷新）
 const settings = persistenceManager.getSettings();

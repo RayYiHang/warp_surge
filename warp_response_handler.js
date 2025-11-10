@@ -3,8 +3,78 @@
  * 处理Warp API响应，缓存数据，检测账户状态
  */
 
-const accountManager = require('./warp_manager.js');
-const persistenceManager = require('./warp_persistence.js');
+// 配置和常量
+const CONFIG = {
+    STORAGE_KEYS: {
+        ACCOUNTS: "warp_accounts",
+        ACTIVE_ACCOUNT: "warp_active_account",
+        USER_SETTINGS: "warp_user_settings",
+        NOTIFICATIONS: "warp_notifications"
+    }
+};
+
+// 账户管理功能
+const accountManager = {
+    markAccountAsBanned(email) {
+        const accounts = JSON.parse($persistentStore.read(CONFIG.STORAGE_KEYS.ACCOUNTS) || "{}");
+        if (accounts[email]) {
+            accounts[email].healthStatus = 'banned';
+            $persistentStore.write(CONFIG.STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts));
+
+            // 如果是活跃账户，清除活跃状态
+            if ($persistentStore.read(CONFIG.STORAGE_KEYS.ACTIVE_ACCOUNT) === email) {
+                $persistentStore.write(CONFIG.STORAGE_KEYS.ACTIVE_ACCOUNT, "");
+            }
+
+            console.log(`账户 ${email} 已标记为ban状态`);
+            return true;
+        }
+        return false;
+    },
+
+    async updateAccountToken(email) {
+        const accounts = JSON.parse($persistentStore.read(CONFIG.STORAGE_KEYS.ACCOUNTS) || "{}");
+        const accountData = accounts[email];
+
+        if (!accountData) {
+            return { success: false, message: "账户不存在" };
+        }
+
+        // 简化的token刷新逻辑
+        console.log(`需要刷新账户 ${email} 的token`);
+        return { success: false, message: "需要手动刷新token" };
+    }
+};
+
+// 持久化管理功能
+const persistenceManager = {
+    getSettings() {
+        try {
+            const settings = JSON.parse($persistentStore.read("warp_settings") || "{}");
+            return {
+                success: true,
+                settings: {
+                    autoRefresh: settings.autoRefresh !== false,
+                    banDetection: settings.banDetection !== false,
+                    healthCheck: settings.healthCheck !== false,
+                    autoSwitch: settings.autoSwitch === true,
+                    ...settings
+                }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `获取设置失败: ${error}`,
+                settings: {
+                    autoRefresh: true,
+                    banDetection: true,
+                    healthCheck: true,
+                    autoSwitch: false
+                }
+            };
+        }
+    }
+};
 
 // 响应处理类
 class ResponseHandler {
@@ -418,7 +488,3 @@ class ResponseHandler {
 // 创建全局响应处理器实例
 const responseHandler = new ResponseHandler();
 
-// 导出处理器
-if (typeof module !== 'undefined') {
-    module.exports = responseHandler;
-}
