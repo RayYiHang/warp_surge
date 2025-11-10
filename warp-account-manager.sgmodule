@@ -1,0 +1,42 @@
+#!name=Warp Account Manager
+#!desc=Warp.dev账户管理器 - Surge实现版
+#!author=Converted from Python project
+#!homepage=https://github.com/
+
+# [Script]
+# Warp账户管理器主脚本
+warp-account-manager = type=script-name="Warp账户管理器",script-path=warp_manager.js
+
+# 账户数据持久化
+warp-data-persistence = type=script-name="账户数据持久化",script-path=warp_persistence.js
+
+# Token自动刷新
+warp-token-refresh = type=script-name="Token自动刷新",script-path=warp_token_refresh.js
+
+# 响应处理和缓存
+warp-response-handler = type=script-name="响应处理器",script-path=warp_response_handler.js
+
+# [URL Rewrite]
+# Warp API请求拦截
+^https://app\.warp\.dev - reject-dict
+
+# [Map Remote]
+# 本地代理映射
+https://app.warp.dev/api - http://127.0.0.1:8080
+
+# [Host]
+# 本地开发支持
+127.0.0.1 app.warp.dev
+
+# [Rule]
+# Warp流量规则
+DOMAIN,app.warp.dev,WarpProxy
+DOMAIN-SUFFIX,warp.dev,WarpProxy
+DOMAIN,dataplane.rudderstack.com,REJECT
+
+# [URL Test]
+# 连接性测试
+https://app.warp.dev/api/health, icon=https://warp.dev/favicon.ico, title=Warp连接测试
+
+# MITM
+hostname = app.warp.dev, dataplane.rudderstack.com, securetoken.googleapis.com
