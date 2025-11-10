@@ -22,6 +22,9 @@ warp-token-refresh = type=script-name="Token自动刷新",script-path=https://ra
 # HTTP API处理器 - 提供API接口支持
 warp-http-backend = type=script-name="HTTP API处理器",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/http-backend.js
 
+# Warp Local服务器 - 直接通过warp.local访问管理界面
+warp-local-server = type=http-request,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-local-server.js,pattern=^http://warp\.local
+
 # [Rule]
 # Warp流量规则 - 确保所有Warp流量都被处理
 DOMAIN,app.warp.dev,Warp
@@ -31,17 +34,17 @@ DOMAIN-SUFFIX,warp.dev,Warp
 DOMAIN,dataplane.rudderstack.com,REJECT
 
 # [Host]
-# 本地管理后台域名映射
+# 本地管理后台域名映射 - 让warp.local指向本地
 127.0.0.1 warp.local
 127.0.0.1 warp-manager.local
+127.0.0.1 manager.warp.local
 
 # [URL Rewrite]
 # Warp API请求处理
 ^https://app\.warp\.dev - reject-dict
 
-# 本地管理界面重定向规则
-^https?://warp\.local/?$ - reject-200
-^https?://warp-manager\.local/?$ - reject-200
+# 其他warp子域名也指向本地管理界面（可选）
+^https?://manager\.warp\.local - reject-200
 
 # [URL Test]
 # 连接性测试
