@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warp Account Manager - Web管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        .main { padding: 30px; }
+        .tabs {
+            display: flex;
+            background: #f5f5f7;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .tab:hover { background: rgba(0, 122, 255, 0.1); }
+        .tab.active {
+            background: #007aff;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e1e1e1;
+        }
+        .card h3 {
+            color: #1d1d1f;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #fafafa;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
+        }
+        textarea {
+            height: 120px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        .btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+            text-decoration: none;
+            user-select: none;
+        }
+        .btn:hover {
+            background: #0051d5;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 122, 255, 0.3);
+        }
+        .btn:active { transform: translateY(0); }
+        .btn.secondary { background: #5856d6; }
+        .btn.secondary:hover { background: #434190; }
+        .btn.danger { background: #ff3b30; }
+        .btn.danger:hover { background: #d70015; }
+        .btn.success { background: #34c759; }
+        .btn.success:hover { background: #28a745; }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .account-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .account-card {
+            background: white;
+            border: 2px solid #e1e1e1;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .account-card:hover {
+            border-color: #007aff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.1);
+        }
+        .account-card.active {
+            border-color: #34c759;
+            background: #f0fff4;
+        }
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .account-email {
+            font-weight: 600;
+            color: #1d1d1f;
+            word-break: break-all;
+            margin-right: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .status.healthy { background: #d4edda; color: #155724; }
+        .status.banned { background: #f8d7da; color: #721c24; }
+        .status.unhealthy { background: #fff3cd; color: #856404; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .stat-card {
+            background: white;
+            border: 2px solid #e1e1e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            border-color: #007aff;
+            transform: translateY(-2px);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #007aff;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .alert {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1565c0;
+            border-left: 4px solid #2196f3;
+        }
+        .alert.success {
+            background: #e8f5e8;
+            border-color: #c3e6c3;
+            color: #2e7d32;
+            border-left-color: #4caf50;
+        }
+        .alert.error {
+            background: #ffebee;
+            border-color: #ffcdd2;
+            color: #c62828;
+            border-left-color: #f44336;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+            font-size: 1.5em;
+            color: #999;
+        }
+        .empty-state p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #c33;
+            font-size: 12px;
+        }
+        .success-message {
+            background: #efe;
+            border: 1px solid #cfc;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #3c3;
+            font-size: 12px;
+        }
+        .account-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .account-actions .btn {
+            font-size: 12px;
+            padding: 8px 16px;
+            margin: 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: #000; }
+
+        @media (max-width: 768px) {
+            .container { margin: 10px; border-radius: 8px; }
+            .header { padding: 20px; }
+            .header h1 { font-size: 2em; }
+            .main { padding: 20px; }
+            .tabs { flex-direction: column; }
+            .tab { margin-bottom: 2px; }
+            .account-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Warp Account Manager</h1>
+            <p>本地管理后台 - 高效管理您的Warp账户</p>
+        </div>
+
+        <div class="main">
+            <div class="alert">
+                <strong>📍 当前访问地址:</strong> <span id="currentUrl"></span><br>
+                <strong>🔧 API接口:</strong> <span id="apiUrl"></span>
+            </div>
+
+            <div id="messageContainer"></div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('accounts')">👥 账户管理</div>
+                <div class="tab" onclick="switchTab('stats')">📊 统计信息</div>
+                <div class="tab" onclick="switchTab('backup')">💾 备份管理</div>
+                <div class="tab" onclick="switchTab('tools')">🔧 系统工具</div>
+            </div>
+
+            <!-- 账户管理 -->
+            <div id="accounts" class="tab-content active">
+                <div class="card">
+                    <h3>➕ 添加新账户</h3>
+                    <div class="form-group">
+                        <label for="accountData">账户数据 (JSON格式)</label>
+                        <textarea id="accountData" placeholder='{
+  "email": "your-email@example.com",
+  "stsTokenManager": {
+    "accessToken": "your_access_token",
+    "refreshToken": "your_refresh_token",
+    "expirationTime": 1234567890000
+  }
+}'></textarea>
+                    </div>
+                    <button class="btn" onclick="addAccount()">
+                        <span id="addAccountLoading"></span>添加账户
+                    </button>
+                    <button class="btn secondary" onclick="loadAccountExample()">加载示例</button>
+                    <button class="btn secondary" onclick="validateAccountData()">验证格式</button>
+                </div>
+
+                <div class="card">
+                    <h3>👥 账户列表</h3>
+                    <button class="btn" onclick="loadAccounts()">
+                        <span id="accountLoading"></span>刷新列表
+                    </button>
+                    <button class="btn secondary" onclick="exportAccounts()">导出账户</button>
+                    <div id="accountList" class="account-grid">
+                        <div class="empty-state">
+                            <h3>暂无账户</h3>
+                            <p>点击"刷新列表"查看已添加的账户，或点击上方"添加新账户"开始使用</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div id="stats" class="tab-content">
+                <div class="card">
+                    <h3>📊 存储统计</h3>
+                    <button class="btn" onclick="loadStats()">
+                        <span id="statsLoading"></span>加载统计
+                    </button>
+                    <div id="statsGrid" class="stats-grid"></div>
+                </div>
+
+                <div class="card">
+                    <h3>🔄 Token刷新统计</h3>
+                    <button class="btn" onclick="loadRefreshStats()">
+                        <span id="refreshStatsLoading"></span>查看刷新统计
+                    </button>
+                    <div id="refreshStatsResult" class="result">点击"查看刷新统计"查看Token刷新统计信息</div>
+                </div>
+
+                <div class="card">
+                    <h3>📋 系统通知</h3>
+                    <button class="btn" onclick="loadNotifications()">
+                        <span id="notificationsLoading"></span>查看通知
+                    </button>
+                    <div id="notificationsResult" class="result">点击"查看通知"查看系统消息</div>
+                </div>
+            </div>
+
+            <!-- 备份管理 -->
+            <div id="backup" class="tab-content">
+                <div class="card">
+                    <h3>💾 数据备份</h3>
+                    <button class="btn success" onclick="backupData()">
+                        <span id="backupLoading"></span>创建备份
+                    </button>
+                    <button class="btn secondary" onclick="scheduleBackup()">定时备份</button>
+                    <div id="backupResult" class="result">点击"创建备份"生成完整的账户数据备份</div>
+                </div>
+
+                <div class="card">
+                    <h3>📥 数据恢复</h3>
+                    <div class="form-group">
+                        <label for="restoreData">备份数据</label>
+                        <textarea id="restoreData" placeholder="粘贴之前备份的JSON数据，或点击下方按钮从文件加载"></textarea>
+                    </div>
+                    <input type="file" id="restoreFile" accept=".json" style="margin-bottom: 10px; display: none;">
+                    <button class="btn secondary" onclick="document.getElementById('restoreFile').click()">从文件加载</button>
+                    <button class="btn success" onclick="restoreData()">恢复数据</button>
+                    <div id="restoreResult" class="result"></div>
+                </div>
+            </div>
+
+            <!-- 系统工具 -->
+            <div id="tools" class="tab-content">
+                <div class="card">
+                    <h3>🔧 系统测试</h3>
+                    <button class="btn" onclick="testSystem()">
+                        <span id="testLoading"></span>运行系统测试
+                    </button>
+                    <button class="btn secondary" onclick="diagnoseSystem()">系统诊断</button>
+                    <div id="testResult" class="result">点击"运行系统测试"检查模块工作状态</div>
+                </div>
+
+                <div class="card">
+                    <h3>⚙️ 系统设置</h3>
+                    <button class="btn" onclick="loadSettings()">
+                        <span id="settingsLoading"></span>加载当前设置
+                    </button>
+                    <button class="btn secondary" onclick="showSettingsDialog()">编辑设置</button>
+                    <div id="settingsResult" class="result"></div>
+                </div>
+
+                <div class="card">
+                    <h3>🗑️ 数据管理</h3>
+                    <button class="btn danger" onclick="clearAllData()">清除所有数据</button>
+                    <button class="btn secondary" onclick="resetSettings()">重置设置</button>
+                    <div id="clearResult" class="result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置对话框 -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettingsDialog()">&times;</span>
+            <h3>⚙️ 系统设置</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="autoRefresh"> 自动刷新Token
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="banDetection"> 启用封禁检测
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="healthCheck"> 健康状态检查
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="autoSwitch"> 自动切换账户
+                </label>
+            </div>
+            <button class="btn success" onclick="saveSettings()">保存设置</button>
+            <button class="btn secondary" onclick="closeSettingsDialog()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局配置
+        const CONFIG = {
+            API_BASE: '/api',
+            CURRENT_TAB: 'accounts'
+        };
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示当前URL
+            document.getElementById('currentUrl').textContent = window.location.origin;
+            document.getElementById('apiUrl').textContent = window.location.origin + CONFIG.API_BASE;
+
+            // 自动加载账户列表
+            loadAccounts();
+
+            // 设置文件读取监听器
+            document.getElementById('restoreFile').addEventListener('change', handleFileSelect);
+
+            // 检查API连接
+            checkAPIConnection();
+        });
+
+        // 检查API连接
+        async function checkAPIConnection() {
+            try {
+                const result = await apiRequest('GET', '/test');
+                if (!result.success) {
+                    showMessage('API连接异常，请确保Surge模块已正确安装', 'error');
+                }
+            } catch (error) {
+                showMessage('无法连接到API服务，请检查Surge配置', 'error');
+            }
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            CONFIG.CURRENT_TAB = tabName;
+        }
+
+        // API请求封装
+        async function apiRequest(method, endpoint, data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(CONFIG.API_BASE + endpoint, options);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('API请求失败:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('messageContainer');
+            const alertClass = type === 'error' ? 'alert error' : type === 'success' ? 'alert success' : 'alert';
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = alertClass;
+            alertDiv.textContent = message;
+
+            container.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, duration);
+        }
+
+        // 显示加载状态
+        function setLoading(elementId, show = true) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = show ? '<span class="loading"></span> ' : '';
+            }
+        }
+
+        // 显示结果
+        function showResult(elementId, data) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (typeof data === 'object') {
+                element.textContent = JSON.stringify(data, null, 2);
+            } else {
+                element.textContent = data;
+            }
+        }
+
+        // 验证账户数据格式
+        function validateAccountData() {
+            const accountData = document.getElementById('accountData').value;
+            if (!accountData.trim()) {
+                showMessage('请输入账户数据', 'error');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(accountData);
+
+                if (!data.email) {
+                    throw new Error('缺少email字段');
+                }
+
+                if (!data.stsTokenManager) {
+                    throw new Error('缺少stsTokenManager字段');
+                }
+
+                if (!data.stsTokenManager.accessToken) {
+                    throw new Error('缺少accessToken字段');
+                }
+
+                if (!data.stsTokenManager.refreshToken) {
+                    throw new Error('缺少refreshToken字段');
+                }
+
+                if (!data.stsTokenManager.expirationTime) {
+                    throw new Error('缺少expirationTime字段');
+                }
+
+                showMessage('账户数据格式验证通过！', 'success');
+                return true;
+            } catch (error) {
+                showMessage('JSON格式错误: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // 添加账户
+        async function addAccount() {
+            if (!validateAccountData()) {
+                return;
+            }
+
+            setLoading('addAccountLoading', true);
+
+            try {
+                const accountData = JSON.parse(document.getElementById('accountData').value);
+                const result = await apiRequest('POST', '/accounts', accountData);
+
+                if (result.success) {
+                    document.getElementById('accountData').value = '';
+                    showMessage('账户添加成功！', 'success');
+                    loadAccounts();
+                } else {
+                    showMessage('添加失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            } finally {
+                setLoading('addAccountLoading', false);
+            }
+        }
+
+        // 加载账户列表
+        async function loadAccounts() {
+            setLoading('accountLoading', true);
+
+            try {
+                const result = await apiRequest('GET', '/accounts');
+
+                if (result.success) {
+                    const accounts = result.data || [];
+                    displayAccounts(accounts);
+                } else {
+                    document.getElementById('accountList').innerHTML =
+                        '<div class="empty-state"><h3>加载失败</h3><p>' + (result.error || '未知错误') + '</p></div>';
+                    showMessage('加载账户列表失败', 'error');
+                }
+            } catch (error) {
+                document.getElementById('accountList').innerHTML =
+                    '<div class="empty-state"><h3>网络错误</h3><p>' + error.message + '</p></div>';
+                showMessage('网络连接失败', 'error');
+            } finally {
+                setLoading('accountLoading', false);
+            }
+        }
+
+        // 显示账户列表
+        function displayAccounts(accounts) {
+            const container = document.getElementById('accountList');
+
+            if (accounts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>暂无账户</h3><p>点击"添加新账户"开始使用</p></div>';
+                return;
+            }
+
+            const html = accounts.map(account => `
+                <div class="account-card ${account.isActive ? 'active' : ''}">
+                    <div class="account-header">
+                        <div class="account-email" title="${account.email}">${account.email}</div>
+                        <span class="status ${account.healthStatus}">${account.healthStatus}</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <small>最后更新: ${new Date(account.lastUpdated).toLocaleString()}</small>
+                    </div>
+                    <div class="account-actions">
+                        ${!account.isActive ?
+                            `<button class="btn" onclick="switchAccount('${account.email}')">设为活跃</button>` :
+                            '<span style="color: #34c759; font-weight: 600;">✅ 当前活跃</span>'
+                        }
+                        <button class="btn danger" onclick="deleteAccount('${account.email}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // 切换账户
+        async function switchAccount(email) {
+            if (!confirm(`确定要切换到账户 ${email} 吗？`)) return;
+
+            try {
+                const result = await apiRequest('POST', '/switch', { email });
+
+                if (result.success) {
+                    showMessage('账户切换成功！', 'success');
+                    loadAccounts();
+                } else {
+                    showMessage('切换失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 删除账户
+        async function deleteAccount(email) {
+            if (!confirm(`确定要删除账户 ${email} 吗？此操作不可恢复！`)) return;
+
+            try {
+                const result = await apiRequest('DELETE', `/accounts/${encodeURIComponent(email)}`);
+
+                if (result.success) {
+                    showMessage('账户删除成功！', 'success');
+                    loadAccounts();
+                } else {
+                    showMessage('删除失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            setLoading('statsLoading', true);
+
+            try {
+                const result = await apiRequest('GET', '/stats');
+
+                if (result.success) {
+                    const stats = result.data || {};
+                    displayStats(stats);
+                } else {
+                    showResult('statsGrid', '加载失败: ' + (result.error || '未知错误'));
+                    showMessage('统计信息加载失败', 'error');
+                }
+            } catch (error) {
+                showResult('statsGrid', '网络错误: ' + error.message);
+                showMessage('网络连接失败', 'error');
+            } finally {
+                setLoading('statsLoading', false);
+            }
+        }
+
+        // 显示统计信息
+        function displayStats(stats) {
+            const container = document.getElementById('statsGrid');
+            const html = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalAccounts || 0}</div>
+                    <div class="stat-label">总账户数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.healthyAccounts || 0}</div>
+                    <div class="stat-label">健康账户</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.bannedAccounts || 0}</div>
+                    <div class="stat-label">被封账户</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.hasBackup ? '有' : '无'}</div>
+                    <div class="stat-label">备份状态</div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // 加载Token刷新统计
+        async function loadRefreshStats() {
+            setLoading('refreshStatsLoading', true);
+
+            try {
+                const result = await apiRequest('GET', '/refresh-stats');
+                showResult('refreshStatsResult', result);
+            } catch (error) {
+                showResult('refreshStatsResult', '网络错误: ' + error.message);
+                showMessage('加载刷新统计失败', 'error');
+            } finally {
+                setLoading('refreshStatsLoading', false);
+            }
+        }
+
+        // 加载通知
+        async function loadNotifications() {
+            setLoading('notificationsLoading', true);
+
+            try {
+                const result = await apiRequest('GET', '/notifications');
+                showResult('notificationsResult', result);
+            } catch (error) {
+                showResult('notificationsResult', '网络错误: ' + error.message);
+                showMessage('加载通知失败', 'error');
+            } finally {
+                setLoading('notificationsLoading', false);
+            }
+        }
+
+        // 备份数据
+        async function backupData() {
+            setLoading('backupLoading', true);
+
+            try {
+                const result = await apiRequest('GET', '/backup');
+
+                if (result.success) {
+                    const backupData = result.data;
+                    showResult('backupResult', backupData);
+
+                    // 复制到剪贴板
+                    try {
+                        await navigator.clipboard.writeText(JSON.stringify(backupData, null, 2));
+                        showMessage('备份已生成并复制到剪贴板！', 'success');
+
+                        // 提供下载
+                        downloadBackup(backupData);
+                    } catch (clipboardError) {
+                        showMessage('备份已生成，请手动复制', 'success');
+                        downloadBackup(backupData);
+                    }
+                } else {
+                    showResult('backupResult', '备份失败: ' + (result.error || '未知错误'));
+                    showMessage('数据备份失败', 'error');
+                }
+            } catch (error) {
+                showResult('backupResult', '网络错误: ' + error.message);
+                showMessage('网络连接失败', 'error');
+            } finally {
+                setLoading('backupLoading', false);
+            }
+        }
+
+        // 下载备份文件
+        function downloadBackup(data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `warp-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 恢复数据
+        async function restoreData() {
+            const backupString = document.getElementById('restoreData').value;
+            if (!backupString.trim()) {
+                showMessage('请输入备份数据', 'error');
+                return;
+            }
+
+            if (!confirm('确定要恢复数据吗？当前数据将被覆盖！')) return;
+
+            try {
+                const result = await apiRequest('POST', '/restore', { backupData: backupString });
+
+                if (result.success) {
+                    showMessage('数据恢复成功！', 'success');
+                    document.getElementById('restoreData').value = '';
+                    loadAccounts();
+                    loadStats();
+                } else {
+                    showResult('restoreResult', '恢复失败: ' + (result.error || '未知错误'));
+                    showMessage('数据恢复失败', 'error');
+                }
+            } catch (error) {
+                showResult('restoreResult', '网络错误: ' + error.message);
+                showMessage('网络连接失败', 'error');
+            }
+        }
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('restoreData').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // 系统测试
+        async function testSystem() {
+            setLoading('testLoading', true);
+
+            try {
+                const result = await apiRequest('POST', '/test');
+                showResult('testResult', result);
+
+                if (result.success) {
+                    showMessage('系统测试通过！', 'success');
+                } else {
+                    showMessage('系统测试发现问题', 'error');
+                }
+            } catch (error) {
+                showResult('testResult', '网络错误: ' + error.message);
+                showMessage('网络连接失败', 'error');
+            } finally {
+                setLoading('testLoading', false);
+            }
+        }
+
+        // 系统诊断
+        async function diagnoseSystem() {
+            try {
+                const testResult = await apiRequest('POST', '/test');
+                const statsResult = await apiRequest('GET', '/stats');
+                const settingsResult = await apiRequest('GET', '/settings');
+
+                const diagnosis = {
+                    timestamp: new Date().toISOString(),
+                    apiConnection: testResult.success,
+                    dataAccess: statsResult.success,
+                    settingsAccess: settingsResult.success,
+                    recommendations: []
+                };
+
+                if (!diagnosis.apiConnection) {
+                    diagnosis.recommendations.push('检查Surge模块是否正确安装');
+                }
+                if (!diagnosis.dataAccess) {
+                    diagnosis.recommendations.push('检查数据存储权限');
+                }
+                if (!diagnosis.settingsAccess) {
+                    diagnosis.recommendations.push('重置系统设置');
+                }
+
+                showResult('testResult', diagnosis);
+                showMessage('系统诊断完成', 'info');
+            } catch (error) {
+                showResult('testResult', '诊断失败: ' + error.message);
+                showMessage('系统诊断失败', 'error');
+            }
+        }
+
+        // 加载设置
+        async function loadSettings() {
+            setLoading('settingsLoading', true);
+
+            try {
+                const result = await apiRequest('GET', '/settings');
+                showResult('settingsResult', result);
+
+                if (result.success) {
+                    // 更新设置对话框
+                    const settings = result.data;
+                    document.getElementById('autoRefresh').checked = settings.autoRefresh;
+                    document.getElementById('banDetection').checked = settings.banDetection;
+                    document.getElementById('healthCheck').checked = settings.healthCheck;
+                    document.getElementById('autoSwitch').checked = settings.autoSwitch;
+                }
+            } catch (error) {
+                showResult('settingsResult', '网络错误: ' + error.message);
+                showMessage('加载设置失败', 'error');
+            } finally {
+                setLoading('settingsLoading', false);
+            }
+        }
+
+        // 显示设置对话框
+        function showSettingsDialog() {
+            document.getElementById('settingsModal').style.display = 'block';
+            loadSettings();
+        }
+
+        // 关闭设置对话框
+        function closeSettingsDialog() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // 保存设置
+        async function saveSettings() {
+            const settings = {
+                autoRefresh: document.getElementById('autoRefresh').checked,
+                banDetection: document.getElementById('banDetection').checked,
+                healthCheck: document.getElementById('healthCheck').checked,
+                autoSwitch: document.getElementById('autoSwitch').checked
+            };
+
+            try {
+                const result = await apiRequest('POST', '/settings', { settings });
+
+                if (result.success) {
+                    showMessage('设置保存成功！', 'success');
+                    closeSettingsDialog();
+                } else {
+                    showMessage('设置保存失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 清除所有数据
+        async function clearAllData() {
+            if (!confirm('确定要清除所有数据吗？此操作不可恢复！\n\n建议先备份数据。')) {
+                return;
+            }
+
+            if (!confirm('再次确认：真的要清除所有账户数据、设置和备份吗？')) {
+                return;
+            }
+
+            try {
+                const result = await apiRequest('DELETE', '/clear');
+
+                if (result.success) {
+                    showMessage('所有数据已清除！', 'success');
+                    loadAccounts();
+                    loadStats();
+                    showResult('clearResult', result);
+                } else {
+                    showResult('clearResult', '清除失败: ' + (result.error || '未知错误'));
+                    showMessage('数据清除失败', 'error');
+                }
+            } catch (error) {
+                showResult('clearResult', '网络错误: ' + error.message);
+                showMessage('网络连接失败', 'error');
+            }
+        }
+
+        // 重置设置
+        async function resetSettings() {
+            if (!confirm('确定要重置所有设置为默认值吗？')) return;
+
+            try {
+                const defaultSettings = {
+                    autoRefresh: true,
+                    banDetection: true,
+                    healthCheck: true,
+                    autoSwitch: false
+                };
+
+                const result = await apiRequest('POST', '/settings', { settings: defaultSettings });
+
+                if (result.success) {
+                    showMessage('设置已重置为默认值！', 'success');
+                    loadSettings();
+                } else {
+                    showMessage('设置重置失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 导出账户
+        async function exportAccounts() {
+            try {
+                const result = await apiRequest('GET', '/accounts');
+
+                if (result.success) {
+                    downloadBackup(result.data);
+                    showMessage('账户数据已导出！', 'success');
+                } else {
+                    showMessage('导出失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 定时备份
+        function scheduleBackup() {
+            showMessage('定时备份功能开发中...', 'info');
+        }
+
+        // 加载账户示例
+        function loadAccountExample() {
+            const example = {
+                email: "example@warp.dev",
+                stsTokenManager: {
+                    accessToken: "example_access_token_here",
+                    refreshToken: "example_refresh_token_here",
+                    expirationTime: Date.now() + 3600000
+                }
+            };
+            document.getElementById('accountData').value = JSON.stringify(example, null, 2);
+            showMessage('已加载示例数据，请替换为真实数据', 'info');
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

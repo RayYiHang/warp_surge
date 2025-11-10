@@ -1,5 +1,5 @@
 #!name=Warp Account Manager
-#!desc=Warp.dev账户管理器 - Surge实现版，支持远程一键安装
+#!desc=Warp.dev账户管理器 - Surge实现版，支持Web管理后台
 #!author=Converted from Python project
 #!homepage=https://github.com/RayYiHang/warp_surge
 
@@ -19,6 +19,9 @@ warp-data-persistence = type=script-name="账户数据持久化",script-path=htt
 # 自动token刷新服务
 warp-token-refresh = type=script-name="Token自动刷新",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_token_refresh.js
 
+# HTTP API处理器 - 提供API接口支持
+warp-http-backend = type=script-name="HTTP API处理器",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/http-backend.js
+
 # [Rule]
 # Warp流量规则 - 确保所有Warp流量都被处理
 DOMAIN,app.warp.dev,Warp
@@ -27,17 +30,18 @@ DOMAIN-SUFFIX,warp.dev,Warp
 # 阻止数据分析请求
 DOMAIN,dataplane.rudderstack.com,REJECT
 
-# [URL Rewrite]
-# 必要的请求重写规则
-^https://app\.warp\.dev/api - reject-dict
-
-# [Map Remote]
-# 本地API映射（如果需要本地开发）
-# https://app.warp.dev/api - http://127.0.0.1:8080
-
 # [Host]
-# 本地开发支持（可选）
-# 127.0.0.1 app.warp.dev
+# 本地管理后台域名映射
+127.0.0.1 warp.local
+127.0.0.1 warp-manager.local
+
+# [URL Rewrite]
+# Warp API请求处理
+^https://app\.warp\.dev - reject-dict
+
+# 本地管理界面重定向规则
+^https?://warp\.local/?$ - reject-200
+^https?://warp-manager\.local/?$ - reject-200
 
 # [URL Test]
 # 连接性测试
