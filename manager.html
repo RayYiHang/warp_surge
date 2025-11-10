@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warp Account Manager - 管理界面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f7;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1d1d1f;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+        }
+
+        .section h3 {
+            color: #1d1d1f;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d1d1;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 100px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #0051d5;
+        }
+
+        button.secondary {
+            background: #5856d6;
+        }
+
+        button.danger {
+            background: #ff3b30;
+        }
+
+        .result {
+            background: #f0f0f0;
+            border: 1px solid #d1d1d1;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .account-list {
+            background: #f9f9f9;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .account-item {
+            background: white;
+            border: 1px solid #e1e1e1;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .account-item h4 {
+            margin: 0 0 10px 0;
+            color: #1d1d1f;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.banned {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.unhealthy {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .alert {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e1e1e1;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: #007aff;
+            color: #007aff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Warp Account Manager</h1>
+
+        <div class="alert">
+            <strong>📌 使用说明：</strong> 此界面需要通过Surge代理访问，请确保Surge中的Warp模块已正确安装并启用。
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('accounts')">账户管理</div>
+            <div class="tab" onclick="switchTab('stats')">状态统计</div>
+            <div class="tab" onclick="switchTab('backup')">数据备份</div>
+            <div class="tab" onclick="switchTab('tools')">工具箱</div>
+        </div>
+
+        <!-- 账户管理 -->
+        <div id="accounts" class="tab-content active">
+            <div class="section">
+                <h3>➕ 添加新账户</h3>
+                <div class="form-group">
+                    <label for="accountData">账户数据 (JSON格式)</label>
+                    <textarea id="accountData" placeholder='{
+  "email": "your-email@example.com",
+  "stsTokenManager": {
+    "accessToken": "...",
+    "refreshToken": "...",
+    "expirationTime": 1234567890000
+  }
+}'></textarea>
+                </div>
+                <button onclick="addAccount()">添加账户</button>
+            </div>
+
+            <div class="section">
+                <h3>👥 账户列表</h3>
+                <button onclick="loadAccounts()">刷新列表</button>
+                <div id="accountList" class="account-list">
+                    <p>点击"刷新列表"查看账户</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🔄 切换活跃账户</h3>
+                <div class="form-group">
+                    <label for="switchEmail">选择账户</label>
+                    <select id="switchEmail">
+                        <option value="">请先刷新账户列表</option>
+                    </select>
+                </div>
+                <button onclick="switchAccount()">切换账户</button>
+            </div>
+        </div>
+
+        <!-- 状态统计 -->
+        <div id="stats" class="tab-content">
+            <div class="section">
+                <h3>📊 存储统计</h3>
+                <button onclick="loadStats()">刷新统计</button>
+                <div id="statsResult" class="result">点击"刷新统计"查看数据</div>
+            </div>
+
+            <div class="section">
+                <h3>🔄 Token刷新统计</h3>
+                <button onclick="loadRefreshStats()">查看刷新统计</button>
+                <div id="refreshStatsResult" class="result">点击"查看刷新统计"查看数据</div>
+            </div>
+
+            <div class="section">
+                <h3>📋 最近通知</h3>
+                <button onclick="loadNotifications()">查看通知</button>
+                <div id="notificationsResult" class="result">点击"查看通知"查看数据</div>
+            </div>
+        </div>
+
+        <!-- 数据备份 -->
+        <div id="backup" class="tab-content">
+            <div class="section">
+                <h3>💾 备份数据</h3>
+                <button onclick="backupData()">创建备份</button>
+                <div id="backupResult" class="result">点击"创建备份"生成数据</div>
+            </div>
+
+            <div class="section">
+                <h3>📥 恢复数据</h3>
+                <div class="form-group">
+                    <label for="restoreData">备份数据</label>
+                    <textarea id="restoreData" placeholder="粘贴备份数据JSON"></textarea>
+                </div>
+                <button onclick="restoreData()" class="danger">恢复数据</button>
+                <div id="restoreResult" class="result"></div>
+            </div>
+
+            <div class="section">
+                <h3>🗑️ 清除所有数据</h3>
+                <button onclick="clearAllData()" class="danger">清除数据</button>
+                <div id="clearResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- 工具箱 -->
+        <div id="tools" class="tab-content">
+            <div class="section">
+                <h3>🔧 测试模块</h3>
+                <button onclick="testModule()">运行测试</button>
+                <div id="testResult" class="result">点击"运行测试"查看结果</div>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ 设置配置</h3>
+                <div class="form-group">
+                    <label for="settingsData">设置数据 (JSON格式)</label>
+                    <textarea id="settingsData" placeholder='{
+  "autoRefresh": true,
+  "banDetection": true,
+  "healthCheck": true
+}'></textarea>
+                </div>
+                <button onclick="updateSettings()">更新设置</button>
+                <button onclick="loadSettings()">加载当前设置</button>
+                <div id="settingsResult" class="result"></div>
+            </div>
+
+            <div class="section">
+                <h3>🔍 查看活跃账户</h3>
+                <button onclick="viewActiveAccount()">查看当前活跃账户</button>
+                <div id="activeAccountResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Surge API基础配置
+        const SURGE_API_BASE = 'http://127.0.0.1:6155/v1/scripts';
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 显示选中的标签
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 执行Surge脚本
+        async function executeScript(scriptName, code) {
+            try {
+                const response = await fetch(`${SURGE_API_BASE}/${scriptName}/evaluate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code })
+                });
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        // 添加账户
+        async function addAccount() {
+            const accountData = document.getElementById('accountData').value;
+            if (!accountData.trim()) {
+                alert('请输入账户数据');
+                return;
+            }
+
+            const code = `accountManager.addAccount(${accountData})`;
+            const result = await executeScript('warp-account-manager', code);
+
+            document.getElementById('accountData').value = '';
+            showResult('addAccountResult', result);
+            loadAccounts(); // 刷新账户列表
+        }
+
+        // 加载账户列表
+        async function loadAccounts() {
+            const code = 'accountManager.getAccountList()';
+            const result = await executeScript('warp-account-manager', code);
+
+            if (result.error) {
+                document.getElementById('accountList').innerHTML = `<p style="color: red;">错误: ${result.error}</p>`;
+                return;
+            }
+
+            const accounts = result.result || [];
+            const accountListHtml = accounts.map(account => `
+                <div class="account-item">
+                    <h4>${account.email} ${account.isActive ? '✅' : ''}</h4>
+                    <p>状态: <span class="status ${account.healthStatus}">${account.healthStatus}</span></p>
+                    <p>最后更新: ${new Date(account.lastUpdated).toLocaleString()}</p>
+                    <button onclick="deleteAccount('${account.email}')" class="danger">删除</button>
+                </div>
+            `).join('');
+
+            document.getElementById('accountList').innerHTML = accountListHtml || '<p>暂无账户</p>';
+
+            // 更新切换账户的下拉选项
+            const switchSelect = document.getElementById('switchEmail');
+            switchSelect.innerHTML = accounts.map(account =>
+                `<option value="${account.email}">${account.email} ${account.isActive ? '(当前)' : ''}</option>`
+            ).join('');
+        }
+
+        // 切换账户
+        async function switchAccount() {
+            const email = document.getElementById('switchEmail').value;
+            if (!email) {
+                alert('请选择账户');
+                return;
+            }
+
+            const code = `accountManager.setActiveAccount('${email}')`;
+            const result = await executeScript('warp-account-manager', code);
+
+            showResult('switchResult', result);
+            loadAccounts(); // 刷新账户列表
+        }
+
+        // 删除账户
+        async function deleteAccount(email) {
+            if (!confirm(`确定要删除账户 ${email} 吗？`)) {
+                return;
+            }
+
+            const code = `accountManager.deleteAccount('${email}')`;
+            const result = await executeScript('warp-account-manager', code);
+
+            showResult('deleteResult', result);
+            loadAccounts(); // 刷新账户列表
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            const code = 'persistenceManager.getStorageStats()';
+            const result = await executeScript('warp-data-persistence', code);
+            showResult('statsResult', result);
+        }
+
+        // 加载Token刷新统计
+        async function loadRefreshStats() {
+            const code = 'tokenRefreshService.getRefreshStats()';
+            const result = await executeScript('warp-token-refresh', code);
+            showResult('refreshStatsResult', result);
+        }
+
+        // 加载通知
+        async function loadNotifications() {
+            const code = 'responseHandler.getRecentNotifications(20)';
+            const result = await executeScript('warp-response-handler', code);
+            showResult('notificationsResult', result);
+        }
+
+        // 备份数据
+        async function backupData() {
+            const code = 'persistenceManager.backupData()';
+            const result = await executeScript('warp-data-persistence', code);
+            showResult('backupResult', result);
+        }
+
+        // 恢复数据
+        async function restoreData() {
+            const backupString = document.getElementById('restoreData').value;
+            if (!backupString.trim()) {
+                alert('请输入备份数据');
+                return;
+            }
+
+            const code = `persistenceManager.restoreData(\`${backupString}\`)`;
+            const result = await executeScript('warp-data-persistence', code);
+
+            showResult('restoreResult', result);
+            document.getElementById('restoreData').value = '';
+            loadAccounts(); // 刷新账户列表
+        }
+
+        // 清除所有数据
+        async function clearAllData() {
+            if (!confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+                return;
+            }
+
+            const code = 'persistenceManager.clearAllData()';
+            const result = await executeScript('warp-data-persistence', code);
+
+            showResult('clearResult', result);
+            loadAccounts(); // 刷新账户列表
+        }
+
+        // 测试模块
+        async function testModule() {
+            const testCode = `
+console.log("=== Warp Account Manager 测试 ===");
+
+// 测试账户数据
+const testAccount = {
+    "email": "test@example.com",
+    "stsTokenManager": {
+        "accessToken": "test_token_123",
+        "refreshToken": "refresh_token_456",
+        "expirationTime": Date.now() + 3600000
+    }
+};
+
+console.log("1. 添加测试账户...");
+const addResult = accountManager.addAccount(testAccount);
+console.log(JSON.stringify(addResult, null, 2));
+
+console.log("2. 获取账户列表...");
+const accounts = accountManager.getAccountList();
+console.log(JSON.stringify(accounts, null, 2));
+
+console.log("3. 获取存储统计...");
+const stats = persistenceManager.getStorageStats();
+console.log(JSON.stringify(stats, null, 2));
+
+console.log("=== 测试完成 ===");
+
+{
+    accounts: accounts,
+    stats: stats,
+    testResult: addResult
+}
+            `;
+
+            const result = await executeScript('warp-account-manager', testCode);
+            showResult('testResult', result);
+        }
+
+        // 加载设置
+        async function loadSettings() {
+            const code = 'persistenceManager.getSettings()';
+            const result = await executeScript('warp-data-persistence', code);
+
+            if (result.result && result.result.settings) {
+                document.getElementById('settingsData').value = JSON.stringify(result.result.settings, null, 2);
+            }
+            showResult('settingsResult', result);
+        }
+
+        // 更新设置
+        async function updateSettings() {
+            const settingsData = document.getElementById('settingsData').value;
+            if (!settingsData.trim()) {
+                alert('请输入设置数据');
+                return;
+            }
+
+            const code = `persistenceManager.setSettings(${settingsData})`;
+            const result = await executeScript('warp-data-persistence', code);
+
+            showResult('settingsResult', result);
+        }
+
+        // 查看活跃账户
+        async function viewActiveAccount() {
+            const code = 'accountManager.getActiveAccount()';
+            const result = await executeScript('warp-account-manager', code);
+            showResult('activeAccountResult', result);
+        }
+
+        // 显示结果
+        function showResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (result.error) {
+                element.textContent = `错误: ${result.error}`;
+                element.style.color = 'red';
+            } else {
+                element.textContent = JSON.stringify(result.result || result, null, 2);
+                element.style.color = 'inherit';
+            }
+        }
+
+        // 页面加载时自动加载账户列表
+        window.addEventListener('load', function() {
+            loadAccounts();
+        });
+    </script>
+</body>
+</html>
