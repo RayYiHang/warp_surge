@@ -1,0 +1,38 @@
+#!name=Warp Account Manager (Box.js风格)
+#!desc=Warp.dev账户管理器 - 使用GitHub Raw触发器实现的纯Surge解决方案
+#!author=RayYiHang
+#!homepage=https://github.com/RayYiHang/warp_surge
+
+# [Script]
+# 核心Web服务器 - 拦截GitHub Raw请求并返回管理界面
+warp-box-server = type=http-request,pattern=^https://raw\.githubusercontent\.com/RayYiHang/warp_surge/main/manager/.*,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-box.js,requires-body=true
+
+# Warp API处理
+warp-api-handler = type=http-request,pattern=^https://app\.warp\.dev/api/,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_manager.js
+
+# Warp响应处理
+warp-response-handler = type=http-response,pattern=^https://app\.warp\.dev/api/,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_response_handler.js
+
+# 数据持久化服务
+warp-data-persistence = type=script-name="账户数据持久化",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_persistence.js
+
+# 自动token刷新服务
+warp-token-refresh = type=script-name="Token自动刷新",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_token_refresh.js
+
+# [Rule]
+# 拦截GitHub Raw的特殊路径请求
+URL-REGEX:(http|https)://raw\.githubusercontent\.com/RayYiHang/warp_surge/main/manager/.* - REJECT
+
+# [URL Rewrite]
+# 将GitHub Raw的特殊路径重定向到脚本处理
+^https://raw\.githubusercontent\.com/RayYiHang/warp_surge/main/manager - REJECT-200
+
+# Warp API处理
+^https://app\.warp\.dev - REJECT-DICT
+
+# [URL Test]
+# 连接性测试
+https://app.warp.dev/api/health, icon=https://warp.dev/favicon.ico, title=Warp连接测试
+
+# [MITM]
+hostname = app.warp.dev, raw.githubusercontent.com, dataplane.rudderstack.com, securetoken.googleapis.com

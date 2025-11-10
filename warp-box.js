@@ -18,8 +18,48 @@ function handleRequest(request, response) {
     const url = request.url || '/';
     const method = request.method || 'GET';
 
-    // 处理根路径和子路径
-    if (url === '/' || url.startsWith('/warp')) {
+    // 提取请求路径 - Box.js风格
+    const path = new URL(url).pathname;
+
+    // 请求类型判断
+    const isGet = method === 'GET';
+    const isPost = method === 'POST';
+    const isOptions = method === 'OPTIONS';
+
+    // 检测是否为warpmanager.com的请求
+    const isWarpManager = /warpmanager\.com/.test(url);
+
+    // Box.js风格的路由处理
+    if (isWarpManager) {
+        // 处理预检请求
+        if (isOptions) {
+            response.status = 200;
+            response.headers = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            };
+            return response;
+        }
+
+        // 处理页面请求 (GET /, GET /warp, GET /manager 等)
+        if (isGet) {
+            response.status = 200;
+            response.headers = {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            };
+            response.body = getManagerHTML();
+            return response;
+        }
+
+        // 处理API请求 (POST /api/*)
+        if (isPost && path.startsWith('/api/')) {
+            return handleAPIRequest(request, response);
+        }
+
+        // 默认响应
         response.status = 200;
         response.headers = {
             'Content-Type': 'text/html; charset=utf-8',
@@ -381,8 +421,8 @@ function getManagerHTML() {
 
         <main class="main">
             <div class="alert alert-info">
-                <strong>🎯 当前访问:</strong> http://warpmanager.com<br>
-                <strong>⚡ 优势:</strong> 无需外部服务器，纯Surge实现<br>
+                <strong>🎯 当前访问:</strong> https://warpmanager.com<br>
+                <strong>⚡ 优势:</strong> Box.js标准实现，MITM拦截处理<br>
                 <strong>🔄 备用:</strong> http://warp.local<br>
                 <strong>🔧 技术:</strong> URL Rewrite + Script 动态响应
             </div>
@@ -1245,6 +1285,6 @@ if (typeof module !== 'undefined') {
 }
 
 console.log('🌐 Warp Account Manager Box.js风格实现已加载');
-console.log('📱 访问地址: http://warpmanager.com');
+console.log('📱 访问地址: https://warpmanager.com');
 console.log('🔄 备用地址: http://warp.local');
 console.log('🔧 技术实现: 完全基于Surge的URL Rewrite + Script');
