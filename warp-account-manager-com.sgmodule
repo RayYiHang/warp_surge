@@ -1,0 +1,61 @@
+#!name=Warp Account Manager
+#!desc=Warp.dev账户管理器 - 完全基于Surge的Web管理界面
+#!author=RayYiHang
+#!homepage=https://github.com/RayYiHang/warp_surge
+
+# [Rule]
+# 将warpmanager.com的所有请求重定向到脚本处理
+# 使用自定义域名避免DNS解析问题
+URL-REGEX:(http|https)://warpmanager\.com/?.* - REJECT
+
+# 备用域名支持
+URL-REGEX:(http|https)://warp\.manager/?.* - REJECT
+URL-REGEX:(http|https)://manager\.warp/?.* - REJECT
+
+# [Script]
+# 核心Web服务器 - 使用warpmanager.com域名
+warp-box-server = type=http-request,pattern=^http://warpmanager\.com,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp-box.js
+
+# 原有Warp账户管理功能
+warp-account-manager = type=script-name="Warp账户管理器",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_manager.js
+
+# 请求处理器 - 处理所有Warp API请求
+warp-request-handler = type=http-request,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_manager.js,pattern=^https://app\.warp\.dev
+
+# 响应处理器 - 分析API响应和状态
+warp-response-handler = type=http-response,script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_response_handler.js,pattern=^https://app\.warp\.dev
+
+# 数据持久化服务
+warp-data-persistence = type=script-name="账户数据持久化",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_persistence.js
+
+# 自动token刷新服务
+warp-token-refresh = type=script-name="Token自动刷新",script-path=https://raw.githubusercontent.com/RayYiHang/warp_surge/refs/heads/main/warp_token_refresh.js
+
+# [Host]
+# 自定义域名映射 - 使用warpmanager.com而不是.local域名
+# 这样可以避免DNS解析问题
+warpmanager.com 127.0.0.1
+warp.manager 127.0.0.1
+manager.warp 127.0.0.1
+warp.local 127.0.0.1  # 保留原域名作为备用
+
+# [URL Rewrite]
+# 核心重写规则 - 将warpmanager.com请求交给HTTP Request脚本处理
+^https?://warpmanager\.com - REJECT-200
+
+# 备用域名的重写规则
+^https?://warp\.manager - REJECT-200
+^https?://manager\.warp - REJECT-200
+
+# 保留原warp.local作为备用
+^https?://warp\.local - REJECT-200
+
+# Warp API请求处理
+^https://app\.warp\.dev - REJECT-DICT
+
+# [URL Test]
+# 连接性测试 - 使用新域名
+https://app.warp.dev/api/health, icon=https://warp.dev/favicon.ico, title=Warp连接测试
+
+# MITM
+hostname = app.warp.dev, dataplane.rudderstack.com, securetoken.googleapis.com

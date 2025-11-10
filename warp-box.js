@@ -381,8 +381,9 @@ function getManagerHTML() {
 
         <main class="main">
             <div class="alert alert-info">
-                <strong>🎯 当前访问:</strong> 完全基于Surge脚本<br>
+                <strong>🎯 当前访问:</strong> http://warpmanager.com<br>
                 <strong>⚡ 优势:</strong> 无需外部服务器，纯Surge实现<br>
+                <strong>🔄 备用:</strong> http://warp.local<br>
                 <strong>🔧 技术:</strong> URL Rewrite + Script 动态响应
             </div>
 
@@ -1244,5 +1245,6 @@ if (typeof module !== 'undefined') {
 }
 
 console.log('🌐 Warp Account Manager Box.js风格实现已加载');
-console.log('📱 访问地址: http://warp.local');
+console.log('📱 访问地址: http://warpmanager.com');
+console.log('🔄 备用地址: http://warp.local');
 console.log('🔧 技术实现: 完全基于Surge的URL Rewrite + Script');
